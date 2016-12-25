@@ -74,8 +74,12 @@ function utf8proc_map(s::String, flags::Integer)
                    (Ptr{UInt8}, Cssize_t, Ref{Ptr{UInt8}}, Cint),
                    s, sizeof(s), p, flags)
     result < 0 && error(unsafe_string(ccall(:utf8proc_errmsg, Cstring,
-                                         (Cssize_t,), result)))
-    unsafe_wrap(String, p[], result, true)::String
+                                            (Cssize_t,), result)))
+    ptr = p[]
+    # TODO: avoid copy
+    str = unsafe_string(ptr, result)
+    Libc.free(ptr)
+    return str
 end
 
 utf8proc_map(s::AbstractString, flags::Integer) = utf8proc_map(String(s), flags)
